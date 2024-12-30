@@ -27,17 +27,18 @@ def main():
     server.bind(('', args.p))
 
     while 1:
-        winner, everyone = run_game(server)
+        winner, everyone, s_final_score, c_final_score = run_game(server)
 
         for _ in range(10):
             for s in everyone:
-                server.sendto(bytes([OPCODE.GAME_END, winner, 1, 1]), s)
+                try: server.sendto(bytes([OPCODE.GAME_END, winner, s_final_score, c_final_score]), s)
+                except: pass
 
             time.sleep(1)
         
 
 
-#Runs the game a single time, returns (winner, everyone)
+#Runs the game a single time, returns (winner, , s_score, c_score)
 def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
     game = Game('map.txt')
 
@@ -46,7 +47,8 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
 
 
     while cman is None or spirit is None:
-        bytes, client_addr = server.recvfrom(12)
+        try: bytes, client_addr = server.recvfrom(12)
+        except: continue
 
         if bytes[0] == OPCODE.JOIN:
             if bytes[1] == 0:
@@ -59,9 +61,25 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
                 spirit = client_addr
 
             else:
-                server.sendto(bytes([OPCODE.ERROR]), client_addr)
+                try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
+                except: pass
+
+        elif bytes[0] == OPCODE.QUIT:
+            if client_addr == cman:
+                cman = None
+            elif client_addr == spirit:
+                spirit = None
+            elif client_addr in watchers:
+                watchers.remove(client_addr)
+            else: #A new client triss to troll the server by quitting nothing 🤡
+                try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
+                except: pass
+
+            pass
+        
         else:
-            server.sendto(bytes([OPCODE.ERROR]), client_addr)
+            try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
+            except Exception as e: pass
 
     #Starting values
     c_coords, s_coords = game.get_current_players_coords()
@@ -74,28 +92,52 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
 
     #Now we play game - get commands and update game state accordingly
     game.next_round() #This starts the game
-    
+
+    first_move = True    
     while game.state != State.WIN:
-        bytes, client_addr = server.recvfrom(12)
+        try: bytes, client_addr = server.recvfrom(12)
+        except: continue
 
     
 
         if bytes[0] == OPCODE.JOIN:
             if bytes[1] != 0:
-                server.sendto(bytes([OPCODE.ERROR]), client_addr)
+                try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
+                except: pass
 
             else: #New spectator! 🚀
                 watchers.append(client_addr)
                 send_update(server, client_addr, 1, c_coords, s_coords, cur_attempts, cur_collected)
 
         elif bytes[0] == OPCODE.MOVEMENT:
-            pass
+            direction = bytes[1]
+
+            if client_addr == cman:
+                state_change = game.apply_move(0, direction)
+
+                if first_move: first_move = False
+
+            elif not(first_move) and client_addr == spirit:
+                state_change = game.apply_move(1, direction)
+
+            if state_change:
+                c_coords, s_coords = game.get_current_players_coords()
+                cur_collected = calc_collected_from_points(game.points)
+                cur_attempts = MAX_ATTEMPTS - game.lives
+
+                try:
+                    send_update(server, cman, 0, c_coords, s_coords, cur_attempts, cur_collected)
+                    send_update(server, spirit, 0, c_coords, s_coords, cur_attempts, cur_collected)
+
+                    for s in watchers:
+                        send_update(server, s, 1, c_coords, s_coords, cur_attempts, cur_collected)
+                except: pass
 
         elif bytes[0] == OPCODE.QUIT:
             if client_addr == cman:
-                return 2, [spirit] + watchers
+                return 2, [spirit] + watchers, MAX_ATTEMPTS - game.lives, game.score
             elif client_addr == spirit:
-                return 1, [cman] + watchers
+                return 1, [cman] + watchers, MAX_ATTEMPTS - game.lives, game.score
             elif client_addr in watchers:
                 watchers.remove(client_addr)
 
@@ -104,14 +146,22 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
         else:
             pass
 
+    winner = game.get_winner() + 1
+    s_final_score, c_final_score = game.get_game_progress()
+    s_final_score = MAX_ATTEMPTS - s_final_score
 
-def send_update(server, player_address, freeze, c_coords, s_coords, attempts, collected:list):
+    return winner, [cman, spirit] + watchers, s_final_score, c_final_score
+
+#Sends a game state update to a given client
+def send_update(server, player_address, freeze, c_coords:tuple[int,int], s_coords:tuple[int,int], attempts, collected:list[int]):
     msg = [OPCODE.GAME_STATE_UPDATE, freeze, c_coords[0], c_coords[1], s_coords[0], s_coords[1], attempts]+collected
-    server.sendto(bytes(msg), player_address)
+
+    try: server.sendto(bytes(msg), player_address)
+    except: pass
 
 #Converts points dict (from Game class) to the wanted format in send_update
 def calc_collected_from_points(points):
-    array_of_collected = [0 if points[p] == 1 else 1 for p in points.keys()]
+    array_of_collected = [0 if points[p] == 1 else 1 for p in points.keys()] #This is an list of length 40, we want a list where each entry is a byte to send
     correct_arr_of_collected = []
 
     for i in range(5):
