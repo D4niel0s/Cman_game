@@ -1,4 +1,5 @@
 import pynput, time
+from enum import IntEnum
 
 def _flush_input():
     try:
@@ -49,3 +50,11 @@ def clear_print(*args, **kwargs):
     """
     print("\033[H\033[J", end="")
     print(*args, **kwargs)
+
+class OPCODE(IntEnum):
+    JOIN = 0x00
+    MOVEMENT = 0x01
+    QUIT = 0x0f
+    GAME_STATE_UPDATE = 0x80
+    GAME_END = 0x8f
+    ERROR = 0xff
