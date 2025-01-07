@@ -94,7 +94,7 @@ class Client:
                     keys = get_pressed_keys(all_keys)
                     if(not len(keys)):
                         # continue
-                        keys = [all_keys[random.int(1,4)]]
+                        keys = [all_keys[random.randint(1,4)]]
                     if(keys[0] == 'q'):
                         self.send_quit()
                         continue
