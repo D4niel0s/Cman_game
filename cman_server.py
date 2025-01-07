@@ -72,6 +72,7 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
             elif client_addr in watchers:
                 watchers.remove(client_addr)
             else: #A new client triss to troll the server by quitting nothing 🤡
+                print("troll")
                 try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
                 except: pass
 
@@ -81,6 +82,7 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
             try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
             except Exception as e: pass
 
+    print("GAME!")
     #Starting values
     c_coords, s_coords = game.get_current_players_coords()
     cur_attempts = 0
@@ -89,7 +91,6 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
     #Sound "starting gun" to Cman and spirit
     send_update(server, spirit, 1, c_coords, s_coords, cur_attempts, cur_collected)
     send_update(server, cman, 0, c_coords, s_coords, cur_attempts, cur_collected)
-
     #Now we play game - get commands and update game state accordingly
     game.next_round() #This starts the game
 
