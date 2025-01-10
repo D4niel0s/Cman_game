@@ -49,7 +49,7 @@ class Client:
         #consider flippind the list!!!
         for id, point in enumerate(list(self.game.points.keys())):
             self.game.points[point] = int(bit_list[id])
-        
+        print(self.game.points)
         self.print_game()
 
     def handle_game_end(data):
@@ -57,6 +57,7 @@ class Client:
         exit()
 
     def handle_error(data):
+        print("received error")
         exit()
 
     def run_game(self):
