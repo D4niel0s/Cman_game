@@ -15,7 +15,7 @@ class Client:
         self.server_address = (server_host_name, server_port)
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.game = Game('map.txt')
-        self.read_sockets = [sys.stdin, self.client_socket]
+        self.read_sockets = [self.client_socket]
 
     def send_join(self):
         msg = [OPCODE.JOIN, self.role]
@@ -75,7 +75,7 @@ class Client:
         }
         while running:
             try:
-                inputready, _, _ = select.select(self.read_sockets, [], [])
+                inputready, _, _ = select.select(self.read_sockets, [], [], 0.1)
             except select.error as e:
                 self.client_socket.close()
             except socket.error as e:
@@ -90,17 +90,16 @@ class Client:
                     # except: print(f"Illigel request from server {bytes[0]}")
                     continue
                 # player moves
-                if s == sys.stdin:
-                    keys = get_pressed_keys(all_keys)
-                    if(not len(keys)):
-                        # continue
-                        keys = [all_keys[random.randint(1,4)]]
-                    if(keys[0] == 'q'):
-                        self.send_quit()
-                        continue
-                    if(keys[0] in ['a', 's', 'd', 'w'] and not self.isFreese):
-                        self.send_move(keys_id[keys[0]])
-                        continue
+            keys = get_pressed_keys(all_keys)
+            if(not len(keys)):
+                continue
+                keys = [all_keys[random.randint(1,4)]]
+            if(keys[0] == 'q'):
+                self.send_quit()
+                continue
+            if(keys[0] in ['a', 's', 'd', 'w'] and not self.isFreese):
+                self.send_move(keys_id[keys[0]])
+                continue
     
     def print_game(self):
         clear_print()

@@ -34,7 +34,7 @@ def get_pressed_keys(keys_filter = None):
                 keys_lst.append(str(key))
     listener = pynput.keyboard.Listener(on_press=on_press)
     listener.start()
-    time.sleep(0.1)
+    time.sleep(0.01)
     listener.stop()
     _flush_input()
     if keys_filter is None:
