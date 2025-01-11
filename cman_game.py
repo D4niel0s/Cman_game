@@ -4,6 +4,11 @@ from enum import IntEnum
 
 MAX_ATTEMPTS = 3
 WIN_SCORE = 32
+ROLE_TO_ID = {
+	'watcher': 0,
+	'cman': 1,
+	'spirit': 2,
+}
 
 class Player(IntEnum):
 	NONE = -1	# Error value for functions returning a Player value.

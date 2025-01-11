@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import socket, sys, argparse
+import socket, argparse
 import select
-import random
 
 from cman_game import *
 from cman_utils import *
@@ -39,7 +38,7 @@ class Client:
         
         self.game.cur_coords[0] = (int(data[1]), int(data[2]))
         self.game.cur_coords[1] = (int(data[3]), int(data[4]))
-        self.game.lives = 3 - int(data[5])
+        self.game.lives = MAX_ATTEMPTS - int(data[5])
         
         byte_data = data[6:]
         bit_list = []
@@ -57,7 +56,14 @@ class Client:
         self.print_game()
 
     def handle_game_end(self,data):
-        print(data)
+        print("Game ended! games stats:")
+        print(f"Remaining lives: {MAX_ATTEMPTS - int(data[0])}")
+        if(int(data[1]) == self.role):
+            print("You won!")
+        else:
+            print(f"{list(ROLE_TO_ID.keys())[int(data[1])]} won!")
+        print(f"spirit cought cman {int(data[2])} times")
+        print(f"cman collected {int(data[3])} points")
         exit()
 
     def handle_error(self, data):
@@ -136,14 +142,8 @@ def main():
 
     if args.p is None:
         args.p = 1337
-    
-    role_to_id = {
-        'watcher': 0,
-        'cman': 1,
-        'spirit': 2,
-    }
 
-    client = Client(args.addr, args.p, role_to_id[args.role])
+    client = Client(args.addr, args.p, ROLE_TO_ID[args.role])
     
     client.send_join()
     
