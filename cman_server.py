@@ -35,6 +35,7 @@ def main():
                 except: pass
 
             time.sleep(1)
+        everyone = []
         
 
 
@@ -72,7 +73,6 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
             elif client_addr in watchers:
                 watchers.remove(client_addr)
             else: #A new client triss to troll the server by quitting nothing 🤡
-                print("troll")
                 try: server.sendto(bytes([OPCODE.ERROR]), client_addr)
                 except: pass
 

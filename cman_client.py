@@ -44,19 +44,23 @@ class Client:
         byte_data = data[6:]
         bit_list = []
         for byte in byte_data:
+            temp = []
             for index in range(8):
-                bit_list.append(not bool(byte & (1 << index)))
+                temp.append(not bool(byte & (1 << index)))
+            temp = temp[::-1]
+            bit_list += temp
+
         #consider flippind the list!!!
         for id, point in enumerate(list(self.game.points.keys())):
             self.game.points[point] = int(bit_list[id])
-        print(self.game.points)
+
         self.print_game()
 
-    def handle_game_end(data):
+    def handle_game_end(self,data):
         print(data)
         exit()
 
-    def handle_error(data):
+    def handle_error(self, data):
         print("received error")
         exit()
 
@@ -76,7 +80,7 @@ class Client:
         }
         while running:
             try:
-                inputready, _, _ = select.select(self.read_sockets, [], [], 0.1)
+                inputready, _, _ = select.select(self.read_sockets, [], [], 0.01)
             except select.error as e:
                 self.client_socket.close()
             except socket.error as e:
@@ -91,14 +95,12 @@ class Client:
                     # except: print(f"Illigel request from server {bytes[0]}")
                     continue
                 # player moves
-            # keys = get_pressed_keys(all_keys)
-            keys = []
+            keys = get_pressed_keys(all_keys)
             if(not len(keys)):
-                keys = [all_keys[random.randint(1,4)]]
                 continue
             if(keys[0] == 'q'):
                 self.send_quit()
-                continue
+                exit()
             if(keys[0] in ['a', 's', 'd', 'w'] and not self.isFreese):
                 self.send_move(keys_id[keys[0]])
                 continue
