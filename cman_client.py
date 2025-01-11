@@ -57,13 +57,13 @@ class Client:
 
     def handle_game_end(self,data):
         print("Game ended! games stats:")
-        print(f"Remaining lives: {MAX_ATTEMPTS - int(data[0])}")
-        if(int(data[1]) == self.role):
+        print(f"Remaining lives: {MAX_ATTEMPTS - int(data[1])}")
+        if(int(data[0]) == self.role):
             print("You won!")
         else:
-            print(f"{list(ROLE_TO_ID.keys())[int(data[1])]} won!")
-        print(f"spirit cought cman {int(data[2])} times")
-        print(f"cman collected {int(data[3])} points")
+            print(f"{list(ROLE_TO_ID.keys())[int(data[0])]} won!")
+        print(f"spirit cought cman {int(data[1])} times")
+        print(f"cman collected {int(data[2])} points")
         exit()
 
     def handle_error(self, data):
