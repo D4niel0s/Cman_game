@@ -45,7 +45,7 @@ class Client:
         bit_list = []
         for byte in byte_data:
             for index in range(8):
-                bit_list.append(bool(byte & (1 << index)))
+                bit_list.append(not bool(byte & (1 << index)))
         #consider flippind the list!!!
         for id, point in enumerate(list(self.game.points.keys())):
             self.game.points[point] = int(bit_list[id])
@@ -91,10 +91,11 @@ class Client:
                     # except: print(f"Illigel request from server {bytes[0]}")
                     continue
                 # player moves
-            keys = get_pressed_keys(all_keys)
+            # keys = get_pressed_keys(all_keys)
+            keys = []
             if(not len(keys)):
-                continue
                 keys = [all_keys[random.randint(1,4)]]
+                continue
             if(keys[0] == 'q'):
                 self.send_quit()
                 continue
