@@ -1,5 +1,7 @@
 import pynput, time
 from enum import IntEnum
+import os, platform
+
 
 def _flush_input():
     try:
@@ -48,6 +50,9 @@ def clear_print(*args, **kwargs):
     Clears the terminal before calling print()
 
     """
+    if platform.system() == 'Windows':
+      os.system('cls')
+
     print("\033[H\033[J", end="")
     print(*args, **kwargs)
 

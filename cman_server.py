@@ -91,6 +91,10 @@ def run_game(server: socket.socket)->tuple[int, list[socket.socket]]:
     #Sound "starting gun" to Cman and spirit
     send_update(server, spirit, 1, c_coords, s_coords, cur_attempts, cur_collected)
     send_update(server, cman, 0, c_coords, s_coords, cur_attempts, cur_collected)
+
+    for w in watchers:
+        send_update(server, w, 1, c_coords, s_coords, cur_attempts, cur_collected)
+        
     #Now we play game - get commands and update game state accordingly
     game.next_round() #This starts the game
 
